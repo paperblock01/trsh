@@ -1,0 +1,175 @@
+#!/bin/bash
+
+source paths.txt
+
+while getopts ":dhe" flag; do
+case $flag in
+   h)
+	echo -e "\nUtility to put a Single File or Directory into the trash
+
+	-h	Displays this message
+	-d	Changes the paths where the trash files and info are stored
+		Default: /home/$USER/.local/share/Trash/files
+			 /home/$USER/.local/share/Trash/info
+	-e	Empties the trash
+
+	Hint: use ./-filename to move files that start with a -
+
+	General Usage: $0 [filename]"
+	exit 0
+   ;;
+   d)
+		echo "Current Trash FILES directory is: $FILES"
+		echo -e "Current Trash INFO directory is: $INFO\n"
+
+		echo "Enter a new Trash FILES directory: "
+		read new_files
+	# check to make sure the $new_files directory exists
+		if [ ! -d "$new_files" ]; then
+			echo "[ERROR] path '$new_files' Does not exist."
+			exit 1
+		fi
+
+		echo "Enter a new Trash INFO directory: "
+		read new_info
+	# check to make sure the $new_info directory exists
+		if [ ! -d "$new_info" ]; then
+			echo "[ERROR] path '$new_info' Does not exist."
+			exit 1
+		fi
+
+	# write the new paths to paths.sh
+		echo "FILES=$new_files" > paths.txt
+		echo "INFO=$new_info" >> paths.txt
+
+		echo -e "\n[SUCCESS]\n"
+		cat paths.sh
+
+		exit 0
+   ;;
+   e)
+		# If $FILES or $INFO does not exist, exit
+		if [ ! -d "$FILES" ]; then
+			echo -e "[ERROR] $FILES Does not exist \n\n$1 -h for help"
+			exit 1
+		fi
+
+		if [ ! -d "$INFO" ]; then
+			echo -e "[ERROR] $INFO Does not exist \n\n$1 -h for help"
+			exit 1
+		fi
+		rm -rf $FILES/*
+		rm -rf $FILES/.* 2>/dev/null
+		rm -rf $INFO/*
+		rm -rf $INFO/.* 2>/dev/null
+
+			echo "[SUCCESS] Emptied $FILES"
+			echo "[SUCCESS] Emptied $INFO"
+		exit 0
+   ;;
+   \?)
+		echo -e "Invalid option -$OPTARG \n\n$0 -h for help"
+		exit 1
+   ;;
+esac
+done
+
+# If $FILES or $INFO does not exist, exit
+if [ ! -d "$FILES" ]; then
+	echo -e "[ERROR] $FILES Does not exist \n\n$1 -h for help"
+	exit 1
+fi
+
+if [ ! -d "$INFO" ]; then
+    echo -e "[ERROR] $INFO Does not exist \n\n$1 -h for help"
+    exit 1
+fi
+
+
+for input in "$@"; do
+
+# Checks for a file
+if [[ ! -e "$input" ]]; then
+    echo "ERROR: File '$1' not found."
+    exit 1
+fi
+
+# Strips the path and leaves only the file or directory name
+file=$(/usr/bin/basename "$input")
+# extracts the base name of the file. Returns nothing if there is no extension
+base="${file%.*}"
+# extracts the extension name if there is one. Returns the name if there is no extension
+extension="${file##*.}"
+
+# check if the file is hidden
+if [[ "$file" == .* ]]; then
+    hidden=true
+else
+    hidden=false
+fi
+
+# handles the $base and $extension for instances of hidden and non-hidden file with or without extension
+# is hidden
+if [[ "$hidden" == true ]]; then
+	# no extension
+	if [[ "$base" == "" ]]; then
+        base=$extension
+        extension=""
+        name=".$base"
+	# yes extension
+    else
+        name="$base.$extension"
+        ext=true
+    fi
+# not hidden
+else
+	# no extension
+    if [[ "$base" == "$extension" ]]; then
+        extension=""
+        name="$base"
+	#yes extension
+    else
+        name="$base.$extension"
+        ext=true
+    fi
+fi
+
+
+# Checks the trash directory for a directory or file with the same name.
+# uses the value of $name to check if the name exists in the trash directory
+# If one exists, it passes _(counter) to the end and assigns it to $name then rechecks $name
+# when $name does not match a file or directory in the trash directory, the loop exits
+counter=1
+while [[ -d "${FILES}/${name}" ]] || [[ -f "${FILES}/${name}" ]] ; do
+	# is hidden
+	if [[ "$hidden" == true ]]; then
+		# yes extension
+		if [[ "$ext" == true ]]; then
+			name="${base}_(${counter}).${extension}"
+		# no extension
+		else
+			name=".${base}_(${counter})"
+		fi
+	# not hidden
+	else
+		# yes extension
+		if [[ "$ext" == true ]]; then
+			name="${base}_(${counter}).${extension}"
+		# no extension
+		else
+			name="${base}_(${counter})"
+		fi
+	fi
+
+    ((counter++))
+done
+
+/usr/bin/mv "$input" "$FILES/$name"
+echo "Moved to Trash: ${FILES}/${name}"
+
+DATE=$(/usr/bin/date +'%FT%T')
+PATH=$(/usr/bin/realpath "$1")
+
+# Creates a file with the name of $name.trashinfo in the info directory. This is so file managers can see and list trashed items
+echo -e "[Trash Info]\nPath=$PATH\nDeletionDate=$DATE" > $INFO/$name.trashinfo
+done
