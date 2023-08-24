@@ -1,2 +1,2 @@
-FILES=/home/mainuser/.local/share/Trash/files
-INFO=/home/mainuser/.local/share/Trash/info
+FILES=/home/$USER/.local/share/Trash/files
+INFO=/home/$USER/.local/share/Trash/info
