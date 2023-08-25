@@ -31,8 +31,19 @@ Info: `/home/$USER/.local/share/Trash/info`
 These locations can be changed with *trsh -d*
 
 ## Install
+`git clone https://github.com/paperblock01/trsh.git`
 
+`cd trsh`
 
+`chmod +x trsh`
+
+To use `trsh` as a universal command:
+
+(Requires root permissions)
+
+`chmod a+x trsh`
+
+`sudo cp trsh /usr/bin`
 
 ## Known Problems
 
