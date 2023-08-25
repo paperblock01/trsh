@@ -46,4 +46,4 @@ To use `trsh` as a universal command:
 `sudo cp trsh /usr/bin`
 
 ## Known Problems
-
+There is one with naming directories that already exist in the trash. A `.` is placed at the end in certain cases. Try creating four files (hidden and not hidden with and without file extensions) and two directories, (hidden and not hidden) then trsh all 6. Recreate them with the same names and trsh them again, and you will see the naming error.
