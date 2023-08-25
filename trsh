@@ -1,11 +1,12 @@
 #!/bin/bash
 
-source paths.txt
+FILES="/home/$USER/.local/share/Trash/files"
+INFO="/home/$USER/.local/share/Trash/info"
 
 while getopts ":dhe" flag; do
 case $flag in
    h)
-	echo -e "\nUtility to put a Single File or Directory into the trash
+	echo -e "\nUtility to put several files or directories into the trash
 
 	-h	Displays this message
 	-d	Changes the paths where the trash files and info are stored
@@ -22,28 +23,34 @@ case $flag in
 		echo "Current Trash FILES directory is: $FILES"
 		echo -e "Current Trash INFO directory is: $INFO\n"
 
-		echo "Enter a new Trash FILES directory: "
+		echo "Enter Trash FILES directory or press enter: "
 		read new_files
 	# check to make sure the $new_files directory exists
-		if [ ! -d "$new_files" ]; then
+		if [[ "$new_files" == "" ]]; then
+			new_files="$FILES"
+		elif [ ! -d "$new_files" ]; then
 			echo "[ERROR] path '$new_files' Does not exist."
 			exit 1
 		fi
 
-		echo "Enter a new Trash INFO directory: "
+		echo "Enter Trash INFO directory or press enter: "
 		read new_info
 	# check to make sure the $new_info directory exists
-		if [ ! -d "$new_info" ]; then
+		if [[ "$new_info" == "" ]]; then
+			new_info="$INFO"
+		elif [ ! -d "$new_info" ]; then
 			echo "[ERROR] path '$new_info' Does not exist."
 			exit 1
 		fi
 
 	# write the new paths to paths.sh
-		echo "FILES=$new_files" > paths.txt
-		echo "INFO=$new_info" >> paths.txt
+		line_num_files=3	# line number of $FILES
+		line_num_info=4		# line number of $INFO
 
-		echo -e "\n[SUCCESS]\n"
-		cat paths.sh
+		/usr/bin/sed -i "${line_num_files}s|.*|FILES=\"$new_files\"|" "$0"
+		/usr/bin/sed -i "${line_num_info}s|.*|INFO=\"$new_info\"|" "$0"
+
+		echo -e "[SUCCESS]"
 
 		exit 0
    ;;
