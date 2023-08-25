@@ -1,2 +1,0 @@
-FILES=/home/$USER/.local/share/Trash/files
-INFO=/home/$USER/.local/share/Trash/info
